@@ -2,12 +2,13 @@ package main
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/require"
 	"io"
 	"strings"
 	"testing"
 	"testing/iotest"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_runLoop(t *testing.T) {
@@ -57,4 +58,11 @@ func Test_runLoop(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_executeCommand(t *testing.T) {
+	args := []string{"echo", "ligma"}
+	err := executeCommand(args[0], args[1:]...)
+
+	require.Nil(t, err)
 }
