@@ -107,7 +107,26 @@ func Test_tokenizeInput(t *testing.T) {
 			name:  "input with escaped characters",
 			input: "ls \\'Definitely a Homework Folder\\'",
 			want: []string{
-				"ls", "'Definitely", "a", "Homework", "Folder'",
+				"ls", "\\'Definitely", "a", "Homework", "Folder\\'",
+			},
+		},
+		{
+			name:    "no closing quote \"",
+			input:   "ls \"Definitely a Homework Folder",
+			wantErr: ErrNoClosingQuote,
+		},
+		{
+			name:  "valid nested quotes",
+			input: "ls \"Definitely a 'Homework' Folder\"",
+			want: []string{
+				"ls", "Definitely a 'Homework' Folder",
+			},
+		},
+		{
+			name:  "setting an arg equal to a string",
+			input: "alias uatemycookie=\"low tc\"",
+			want: []string{
+				"alias", "uatemycookie=\"low tc\"",
 			},
 		},
 	}
@@ -118,8 +137,10 @@ func Test_tokenizeInput(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			tokens, err := tokenizeInput(tc.input, true)
-			if !reflect.DeepEqual(tokens, tc.want) {
+			tokens, err := tokenizeInput(tc.input)
+			// reflect.DeepEqual was returning false when comparing empty arrays
+			// for some reason:
+			if !reflect.DeepEqual(tokens, tc.want) && (len(tokens) != 0 || len(tc.want) != 0) {
 				t.Errorf("wanted %v, got %v tokens", tc.want, tokens)
 			}
 			if err != tc.wantErr {

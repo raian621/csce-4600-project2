@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +12,20 @@ import (
 
 	"github.com/raian621/csce-4600-project2/builtins"
 )
+
+type BuiltinEntrypoint func(io.Writer, ...string) error
+
+var builtinMap map[string]BuiltinEntrypoint = map[string]BuiltinEntrypoint{
+	"cd": func(_w io.Writer, args ...string) error {
+		return builtins.ChangeDirectory(args...)
+	},
+	"env": builtins.EnvironmentVariables,
+
+	// Ryan-implemented builtins
+	"alias":   builtins.Alias,
+	"unalias": builtins.Unalias,
+	"pwd":     builtins.PrintWorkingDirectory,
+}
 
 func main() {
 	exit := make(chan struct{}, 2) // buffer this so there's no deadlock.
@@ -69,20 +82,32 @@ func handleInput(w io.Writer, input string, exit chan<- struct{}) error {
 	// Remove trailing spaces.
 	input = strings.TrimSpace(input)
 
-	// Split the input separate the command name and the command arguments.
-	args := strings.Split(input, " ")
+	// seperate arguments in the input by tokenizing the input
+	args, err := tokenizeInput(input)
+	if err != nil {
+		return err
+	}
 	name, args := args[0], args[1:]
+	// if the name of the command matches a defined alias, replace the name and args[0:len(aliasTokens)]
+	// with tokens generated from the defined alias:
+	if alias, ok := builtins.AliasMap[name]; ok {
+		aliasArgs, err := tokenizeInput(alias)
+		if err != nil {
+			return err
+		}
 
-	// Check for built-in commands.
-	// New builtin commands should be added here. Eventually this should be refactored to its own func.
-	switch name {
-	case "cd":
-		return builtins.ChangeDirectory(args...)
-	case "env":
-		return builtins.EnvironmentVariables(w, args...)
-	case "exit":
+		name = aliasArgs[0]
+		args = append(aliasArgs[1:], args...)
+	}
+
+	if name == "exit" {
 		exit <- struct{}{}
 		return nil
+	}
+
+	// Check for built-in commands.
+	if fn, ok := builtinMap[name]; ok {
+		return fn(w, args...)
 	}
 
 	return executeCommand(name, args...)
@@ -102,7 +127,7 @@ func executeCommand(name string, arg ...string) error {
 
 var ErrNoClosingQuote = errors.New("missing closing quote")
 
-func tokenizeInput(input string, removeEscapeChars bool) ([]string, error) {
+func tokenizeInput(input string) ([]string, error) {
 	var (
 		start        int      = 0
 		end          int      = 0
@@ -110,19 +135,9 @@ func tokenizeInput(input string, removeEscapeChars bool) ([]string, error) {
 		shouldEscape bool     = false
 	)
 
-	filterEscapeChars := func(token string) string {
-		var filtered bytes.Buffer
-
-		var i int
-		for i < len(token) {
-			if token[i] == '\\' {
-				i++
-			}
-			filtered.WriteByte(token[i])
-			i++
-		}
-
-		return filtered.String()
+	// om nom nom
+	consumeToken := func(start, end int) {
+		tokens = append(tokens, input[start:end])
 	}
 
 	for end < len(input) {
@@ -136,11 +151,7 @@ func tokenizeInput(input string, removeEscapeChars bool) ([]string, error) {
 		// spaces separate tokens
 		case ' ':
 			if start != end {
-				token := string(input[start:end])
-				if removeEscapeChars {
-					token = filterEscapeChars(token)
-				}
-				tokens = append(tokens, token)
+				consumeToken(start, end)
 			}
 			start = end + 1
 		// escape certain characters
@@ -158,11 +169,13 @@ func tokenizeInput(input string, removeEscapeChars bool) ([]string, error) {
 			if end == len(input) {
 				return []string{}, ErrNoClosingQuote
 			}
-			token := string(input[start+1 : end])
-			if removeEscapeChars {
-				token = filterEscapeChars(token)
+			if input[start] != quoteChar {
+				// this case is for something like cmd var="askdjfhkdfhj"
+				consumeToken(start, end+1)
+			} else {
+				// do not consume leading quote
+				consumeToken(start+1, end)
 			}
-			tokens = append(tokens, token)
 			start = end + 1
 		}
 		end++
@@ -170,11 +183,7 @@ func tokenizeInput(input string, removeEscapeChars bool) ([]string, error) {
 
 	// consume last token if it exists
 	if start != end {
-		token := string(input[start:end])
-		if removeEscapeChars {
-			token = filterEscapeChars(token)
-		}
-		tokens = append(tokens, token)
+		consumeToken(start, end)
 	}
 
 	return tokens, nil
