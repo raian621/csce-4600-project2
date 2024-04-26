@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"io"
+	"reflect"
 	"strings"
 	"testing"
 	"testing/iotest"
@@ -65,4 +66,65 @@ func Test_executeCommand(t *testing.T) {
 	err := executeCommand(args[0], args[1:]...)
 
 	require.Nil(t, err)
+}
+
+func Test_tokenizeInput(t *testing.T) {
+	testCases := []struct {
+		name    string
+		input   string
+		want    []string
+		wantErr error
+	}{
+		{
+			name:  "basic tokenization",
+			input: "ls Homework",
+			want: []string{
+				"ls", "Homework",
+			},
+		},
+		{
+			name:  "adversarial whitespace",
+			input: "    ls   Homework  ",
+			want: []string{
+				"ls", "Homework",
+			},
+		},
+		{
+			name:  "input with \" string with spaces",
+			input: "ls \"Definitely a Homework Folder\"",
+			want: []string{
+				"ls", "Definitely a Homework Folder",
+			},
+		},
+		{
+			name:  "input with ' string with spaces",
+			input: "ls 'Definitely a Homework Folder'",
+			want: []string{
+				"ls", "Definitely a Homework Folder",
+			},
+		},
+		{
+			name:  "input with escaped characters",
+			input: "ls \\'Definitely a Homework Folder\\'",
+			want: []string{
+				"ls", "'Definitely", "a", "Homework", "Folder'",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc // avoid Go loop gotcha ig
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			tokens, err := tokenizeInput(tc.input, true)
+			if !reflect.DeepEqual(tokens, tc.want) {
+				t.Errorf("wanted %v, got %v tokens", tc.want, tokens)
+			}
+			if err != tc.wantErr {
+				t.Errorf("wanted %v, got %v error", tc.wantErr, err)
+			}
+		})
+	}
 }

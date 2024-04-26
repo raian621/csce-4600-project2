@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -96,4 +98,84 @@ func executeCommand(name string, arg ...string) error {
 
 	// Execute the command and return the error.
 	return cmd.Run()
+}
+
+var ErrNoClosingQuote = errors.New("missing closing quote")
+
+func tokenizeInput(input string, removeEscapeChars bool) ([]string, error) {
+	var (
+		start        int      = 0
+		end          int      = 0
+		tokens       []string = make([]string, 0)
+		shouldEscape bool     = false
+	)
+
+	filterEscapeChars := func(token string) string {
+		var filtered bytes.Buffer
+
+		var i int
+		for i < len(token) {
+			if token[i] == '\\' {
+				i++
+			}
+			filtered.WriteByte(token[i])
+			i++
+		}
+
+		return filtered.String()
+	}
+
+	for end < len(input) {
+		if shouldEscape {
+			end++
+			shouldEscape = false
+			continue
+		}
+
+		switch input[end] {
+		// spaces separate tokens
+		case ' ':
+			if start != end {
+				token := string(input[start:end])
+				if removeEscapeChars {
+					token = filterEscapeChars(token)
+				}
+				tokens = append(tokens, token)
+			}
+			start = end + 1
+		// escape certain characters
+		case '\\':
+			shouldEscape = true
+		// consume string token
+		case '\'':
+			fallthrough
+		case '"':
+			quoteChar := input[end]
+			end++
+			for end < len(input) && input[end] != quoteChar {
+				end++
+			}
+			if end == len(input) {
+				return []string{}, ErrNoClosingQuote
+			}
+			token := string(input[start+1 : end])
+			if removeEscapeChars {
+				token = filterEscapeChars(token)
+			}
+			tokens = append(tokens, token)
+			start = end + 1
+		}
+		end++
+	}
+
+	// consume last token if it exists
+	if start != end {
+		token := string(input[start:end])
+		if removeEscapeChars {
+			token = filterEscapeChars(token)
+		}
+		tokens = append(tokens, token)
+	}
+
+	return tokens, nil
 }
