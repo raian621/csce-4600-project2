@@ -22,8 +22,9 @@ var builtinMap map[string]BuiltinEntrypoint = map[string]BuiltinEntrypoint{
 
 	// Ryan-implemented builtins
 	"alias":   builtins.Alias,
-	"unalias": builtins.Unalias,
+	"history": builtins.History,
 	"pwd":     builtins.PrintWorkingDirectory,
+	"unalias": builtins.Unalias,
 }
 
 func main() {
@@ -80,6 +81,7 @@ func printPrompt(w io.Writer) error {
 func handleInput(w io.Writer, input string, exit chan<- struct{}) error {
 	// Remove trailing spaces.
 	input = strings.TrimSpace(input)
+	builtins.AddHistoryEntry(input)
 
 	// seperate arguments in the input by tokenizing the input
 	args, err := tokenizeInput(input)
