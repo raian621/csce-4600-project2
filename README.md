@@ -1,3 +1,7 @@
+[![Go Coverage](https://github.com/raian621/csce-4600-project2/wiki/coverage.svg)](https://raw.githack.com/wiki/raian621/csce-4600-project2/coverage.html)
+
+
+
 # Project 2: Shell Builtins
 
 ## Description
