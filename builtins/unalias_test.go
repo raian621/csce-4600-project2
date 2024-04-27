@@ -33,6 +33,35 @@ func TestUnalias(t *testing.T) {
 			},
 			wantMap: make(map[string]string), // emptied map
 		},
+		{
+			name: "unalias some aliases",
+			args: []string{"c"},
+			currMap: map[string]string{
+				"a": "alias",
+				"c": "cat",
+				"l": "ls -l",
+			},
+			wantMap: map[string]string{
+				"a": "alias",
+				"l": "ls -l",
+			},
+		},
+		{
+			name: "unalias undefined alias",
+			args: []string{"d"},
+			currMap: map[string]string{
+				"a": "alias",
+				"c": "cat",
+				"l": "ls -l",
+			},
+			wantOut: "alias 'd' not found\n",
+			wantMap: map[string]string{
+				"a": "alias",
+				"c": "cat",
+				"l": "ls -l",
+			},
+			wantErr: builtins.ErrUndefinedAlias,
+		},
 	}
 
 	for _, tc := range testCases {
