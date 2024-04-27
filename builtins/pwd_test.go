@@ -10,7 +10,9 @@ import (
 
 func TestPrintWorkingDirectory(t *testing.T) {
 	// kept getting 'getwd: no such file or directory' before adding this line
-	os.Chdir(t.TempDir())
+	if err := os.Chdir(t.TempDir()); err != nil {
+		t.Fatal(err)
+	}
 
 	testCases := []struct {
 		name    string
