@@ -60,7 +60,7 @@ func TestPrintWorkingDirectory(t *testing.T) {
 			// don't try to test for an exact PWD on success, as it'll likely  vary across machines,
 			// just verify that the usage is printed out upon an error.
 			if err != nil && out.String() != tc.wantOut {
-
+				t.Fatalf("expected '%s', got '%s'", tc.wantOut, out.String())
 			}
 		})
 	}

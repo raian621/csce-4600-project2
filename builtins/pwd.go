@@ -12,6 +12,7 @@ var ErrUnknownArg error = errors.New("unknown argument supplied")
 // https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html#index-pwd
 func PrintWorkingDirectory(w io.Writer, args ...string) (err error) {
 	if len(args) > 1 {
+		fmt.Fprintf(w, "usage: pwd [-L|-P]")
 		return ErrInvalidArgCount
 	}
 
