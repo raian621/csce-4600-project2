@@ -1,16 +1,20 @@
 package builtins
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"slices"
 	"strings"
 )
 
-var AliasMap map[string]string = make(map[string]string, 0)
+var (
+	AliasMap          map[string]string = make(map[string]string, 0)
+	ErrUndefinedAlias error             = errors.New("alias not defined")
+)
 
 // https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html#index-alias
-func Alias(w io.Writer, args ...string) error {
+func Alias(w io.Writer, args ...string) (err error) {
 	printAllAliases := func() {
 		keys := make([]string, 0, len(AliasMap))
 		for k := range AliasMap {
@@ -41,8 +45,9 @@ func Alias(w io.Writer, args ...string) error {
 			fmt.Fprintf(w, "alias %s='%s'\n", arg, value)
 		} else {
 			fmt.Fprintf(w, "alias '%s' not found\n", arg)
+			err = ErrUndefinedAlias
 		}
 	}
 
-	return nil
+	return err
 }
