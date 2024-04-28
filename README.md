@@ -1,8 +1,8 @@
 [![Go Coverage](https://github.com/raian621/csce-4600-project2/wiki/coverage.svg)](https://raw.githack.com/wiki/raian621/csce-4600-project2/coverage.html)
 
-
-
 # Project 2: Shell Builtins
+
+![screenshot of the shell running on the left, with the required university credentials printed out on the right](screenshot.png)
 
 ## Description
 
@@ -22,20 +22,16 @@ As an example, two shell builtins have already been added to the package builtin
 - `cd`
 - `env`
 
-## Steps
+## Commands
 
-1. Clone down the example input/output and skeleton `main.go`:
+I implemented the following commands:
 
-    `git clone https://github.com/jh125486/CSCE4600`
- 
-2. Copy the `Project2` files to your own git project.
+Command   | Reference
+----------|---------------------------------------------------------------------
+`alias`   | https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html#index-alias
+`builtin` | https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html#index-builtin
+`history` | https://www.gnu.org/software/bash/manual/html_node/Bash-History-Builtins.html#index-history
+`pwd`     | https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html#index-pwd
+`unalias` | https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html#index-unalias
 
-    1. In your `go.mod`, replace "jh125486" in the module line with your GitHub name, e.g.:
-
-      - "module github.com/jh125486/CSCE4600" changes to "module github.com/CoolStudent123/CSCE4600"
-  
-    2. In the `main.go`, replace "jh125486" in the imports with your package path, e.g.:
-
-      - "github.com/jh125486/CSCE4600/Project2/builtins" changes to "github.com/CoolStudent123/CSCE4600/Project2/builtins"
-
-3. Start editing the `main.go` command switch (lines 57-64) and the package `builtins` with your chosen commands.
+They're alright I guess.
