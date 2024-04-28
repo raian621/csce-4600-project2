@@ -111,6 +111,8 @@ func executeCommand(name string, arg ...string) error {
 	// Set the correct output device.
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
+	// set the input device too
+	cmd.Stdin = os.Stdin
 
 	// Execute the command and return the error.
 	return cmd.Run()
