@@ -12,21 +12,6 @@ import (
 	"github.com/raian621/csce-4600-project2/builtins"
 )
 
-type BuiltinEntrypoint func(io.Writer, ...string) error
-
-var builtinMap map[string]BuiltinEntrypoint = map[string]BuiltinEntrypoint{
-	"cd": func(_w io.Writer, args ...string) error {
-		return builtins.ChangeDirectory(args...)
-	},
-	"env": builtins.EnvironmentVariables,
-
-	// Ryan-implemented builtins
-	"alias":   builtins.Alias,
-	"history": builtins.History,
-	"pwd":     builtins.PrintWorkingDirectory,
-	"unalias": builtins.Unalias,
-}
-
 func main() {
 	exit := make(chan struct{}, 2) // buffer this so there's no deadlock.
 	runLoop(os.Stdin, os.Stdout, os.Stderr, exit)
@@ -81,7 +66,12 @@ func printPrompt(w io.Writer) error {
 func handleInput(w io.Writer, input string, exit chan<- struct{}) error {
 	// Remove trailing spaces.
 	input = strings.TrimSpace(input)
-	builtins.AddHistoryEntry(input)
+
+	if len(input) > 0 {
+		builtins.AddHistoryEntry(input)
+	} else {
+		return nil
+	}
 
 	// seperate arguments in the input by tokenizing the input
 	args, err := tokenizeInput(input)
@@ -107,7 +97,7 @@ func handleInput(w io.Writer, input string, exit chan<- struct{}) error {
 	}
 
 	// Check for built-in commands.
-	if fn, ok := builtinMap[name]; ok {
+	if fn, ok := builtins.BuiltinMap[name]; ok {
 		return fn(w, args...)
 	}
 
